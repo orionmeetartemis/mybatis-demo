@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--        一对一查询-->
+<mapper namespace="com.zpc.mybatis.dao.OrderMapper">
+    <!--
+        id: resultMap的唯一标识
+        type：返回的结果集对应的 java 实体类型
+        autoMapping:默认完成映射，如果已开启驼峰匹配，可以解决驼峰匹配 默认为 true
+    -->
+    <resultMap id="OrderUserResultMap" type="com.zpc.mybatis.pojo.Order" autoMapping="true">
+        <!--
+            指定主键
+            column: 数据库中列名
+            property：java 实体类中的属性名
+       -->
+        <id column="id" property="id"/>
+        <!--association:完成子对象的映射-->
+        <!--property:子对象在父对象中的属性名-->
+        <!--javaType:子对象的java类型-->
+        <!--autoMapping:完成子对象的自动映射，若开启驼峰，则按驼峰匹配-->
+        <association property="user" javaType="com.zpc.mybatis.pojo.User" autoMapping="true">
+            <id column="user_id" property="id"/>
+        </association>
+    </resultMap>
+
+    <select id="queryOrderWithUserByOrderNumber" resultMap="OrderUserResultMap">
+        select * from tb_order o left join tb_user u on o.user_id=u.id where o.order_number = #{number}
+    </select>
+
+    <!--    一对多-->
+    <resultMap id="OrderUserDetailResultMap" type="com.zpc.mybatis.pojo.Order" autoMapping="true">
+        <id column="o_id" property="id"/>
+        <!--collection:定义子对象集合映射-->
+        <!--association:完成子对象的映射-->
+        <!--property:子对象在父对象中的属性名-->
+        <!--javaType:子对象的java类型-->
+        <!--autoMapping:完成子对象的自动映射，若开启驼峰，则按驼峰匹配-->
+        <association property="user" javaType="com.zpc.mybatis.pojo.User" autoMapping="true">
+            <id column="u_id" property="id"/>
+        </association>
+        <collection property="detailList" javaType="List" ofType="com.zpc.mybatis.pojo.OrderDetail" autoMapping="true">
+            <id column="d_id" property="id"/>
+        </collection>
+    </resultMap>
+
+    <select id="queryOrderWithUserAndDetailByOrderNumber" resultMap="OrderUserDetailResultMap">
+        select o.id  o_id,o.user_id,o.order_number,o.created,o.updated,
+        u.id  u_id, u.user_name, u.password, u.name, u.age, u.sex, u.birthday, u.created, u.updated,
+        d.id  d_id, order_id, total_price, item_id, status
+        from tb_order o
+        left join tb_user u on o.user_id = u.id
+        left join tb_orderdetail d on o.id = d.order_id
+        where o.order_number = #{number}
+</select>
+
+
+    <resultMap id="OrderUserDetailItemResultMap" type="com.zpc.mybatis.pojo.Order" autoMapping="true">
+        <id column="id" property="id"/>
+        <association property="user" javaType="com.zpc.mybatis.pojo.User" autoMapping="true">
+            <id column="user_id" property="id"/>
+        </association>
+        <collection property="detailList" javaType="List" ofType="com.zpc.mybatis.pojo.OrderDetail" autoMapping="true">
+            <id column="detail_id" property="id"/>
+            <association property="item" javaType="com.zpc.mybatis.pojo.Item" autoMapping="true">
+                <id column="item_id" property="id"/>
+            </association>
+        </collection>
+    </resultMap>
+
+    <select id="queryOrderWithUserAndDetailItemByOrderNumber" resultMap="OrderUserDetailItemResultMap">
+        select * ,od.id as detail_id from tb_order o
+        left join tb_user u on o.user_id=u.id
+        left join tb_orderdetail od on o.id=od.order_id
+        left join tb_item i on od.item_id=i.id
+        where o.order_number = #{number}
+</select>
+</mapper>
